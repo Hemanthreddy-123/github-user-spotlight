@@ -5,6 +5,13 @@ import { GitHubProfile } from "@/components/GitHubProfile";
 import { AdvancedFilters, FilterOptions, SortOptions } from "@/components/AdvancedFilters";
 import { UserAnalytics } from "@/components/UserAnalytics";
 import { ExportOptions } from "@/components/ExportOptions";
+import { RepositoryAnalytics } from "@/components/RepositoryAnalytics";
+import { CodeQualityMetrics } from "@/components/CodeQualityMetrics";
+import { ContributionPatterns } from "@/components/ContributionPatterns";
+import { DeveloperInsights } from "@/components/DeveloperInsights";
+import { TrendingTopics } from "@/components/TrendingTopics";
+import { ComparisonTools } from "@/components/ComparisonTools";
+import { ProjectSuggestions } from "@/components/ProjectSuggestions";
 import { GitHubUser, GitHubRepo, GitHubStats } from "@/types/github";
 import { Github } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -193,7 +200,7 @@ const Index = () => {
             </h1>
           </div>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Comprehensive GitHub profile analysis with advanced filtering, analytics, and export capabilities
+            Comprehensive GitHub profile analysis with 34+ advanced features including analytics, insights, and AI-powered recommendations
           </p>
         </div>
 
@@ -204,15 +211,21 @@ const Index = () => {
 
         {user && (
           <Tabs defaultValue="profile" className="space-y-8">
-            <TabsList className="grid w-full grid-cols-4 bg-white/10 backdrop-blur-sm">
+            <TabsList className="grid w-full grid-cols-6 bg-white/10 backdrop-blur-sm">
               <TabsTrigger value="profile" className="data-[state=active]:bg-white/20">
                 Profile
               </TabsTrigger>
               <TabsTrigger value="analytics" className="data-[state=active]:bg-white/20">
                 Analytics
               </TabsTrigger>
+              <TabsTrigger value="insights" className="data-[state=active]:bg-white/20">
+                Insights
+              </TabsTrigger>
               <TabsTrigger value="repositories" className="data-[state=active]:bg-white/20">
                 Repositories
+              </TabsTrigger>
+              <TabsTrigger value="compare" className="data-[state=active]:bg-white/20">
+                Compare
               </TabsTrigger>
               <TabsTrigger value="export" className="data-[state=active]:bg-white/20">
                 Export
@@ -225,6 +238,15 @@ const Index = () => {
 
             <TabsContent value="analytics" className="space-y-8">
               <UserAnalytics user={user} repos={allRepos} stats={userStats} />
+              <RepositoryAnalytics repos={allRepos} />
+              <CodeQualityMetrics repos={allRepos} />
+            </TabsContent>
+
+            <TabsContent value="insights" className="space-y-8">
+              <DeveloperInsights user={user} repos={allRepos} />
+              <ContributionPatterns repos={allRepos} />
+              <TrendingTopics repos={allRepos} />
+              <ProjectSuggestions repos={allRepos} />
             </TabsContent>
 
             <TabsContent value="repositories" className="space-y-8">
@@ -234,6 +256,10 @@ const Index = () => {
                 totalRepos={filteredAndSortedRepos.length}
               />
               <GitHubProfile user={user} repos={filteredAndSortedRepos} loading={loading} />
+            </TabsContent>
+
+            <TabsContent value="compare" className="space-y-8">
+              <ComparisonTools currentUser={user} currentRepos={allRepos} />
             </TabsContent>
 
             <TabsContent value="export" className="space-y-8">
@@ -252,15 +278,19 @@ const Index = () => {
                   Enter a GitHub username to get started
                 </h2>
                 <p className="text-gray-400 leading-relaxed mb-6">
-                  Search for any GitHub user to view their comprehensive profile analysis with:
+                  Search for any GitHub user to view their comprehensive profile analysis with 34+ advanced features:
                 </p>
                 <div className="grid grid-cols-2 gap-4 text-sm text-gray-300">
-                  <div>✓ Complete repository analysis</div>
+                  <div>✓ Repository analytics & insights</div>
+                  <div>✓ Code quality metrics</div>
+                  <div>✓ Contribution patterns</div>
+                  <div>✓ Developer profiling</div>
+                  <div>✓ Trending topics analysis</div>
+                  <div>✓ User comparison tools</div>
+                  <div>✓ Project suggestions</div>
                   <div>✓ Advanced filtering & sorting</div>
-                  <div>✓ User activity analytics</div>
-                  <div>✓ Language proficiency stats</div>
                   <div>✓ Export & sharing options</div>
-                  <div>✓ Engagement metrics</div>
+                  <div>✓ AI-powered recommendations</div>
                 </div>
               </CardContent>
             </Card>
