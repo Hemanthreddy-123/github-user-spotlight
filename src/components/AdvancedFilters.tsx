@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -74,12 +75,12 @@ export const AdvancedFilters = ({ onFilterChange, onSortChange, totalRepos }: Ad
   };
 
   return (
-    <Card className="bg-white/5 backdrop-blur-sm border-white/10">
+    <Card className="bg-gray-900/90 backdrop-blur-sm border-gray-700">
       <CardHeader>
-        <CardTitle className="text-white flex items-center gap-2">
+        <CardTitle className="text-gray-100 flex items-center gap-2">
           <Filter className="w-5 h-5" />
           Advanced Filters & Sorting
-          <Badge variant="secondary" className="bg-blue-500/20 text-blue-300">
+          <Badge variant="secondary" className="bg-blue-600/30 text-blue-200 border-blue-500/30">
             {totalRepos} repos
           </Badge>
         </CardTitle>
@@ -92,23 +93,23 @@ export const AdvancedFilters = ({ onFilterChange, onSortChange, totalRepos }: Ad
             placeholder="Search repositories..."
             value={filters.searchQuery}
             onChange={(e) => handleFilterChange('searchQuery', e.target.value)}
-            className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+            className="pl-10 bg-gray-800/80 border-gray-600 text-gray-100 placeholder:text-gray-400 focus:border-blue-500"
           />
         </div>
 
         {/* Language Filter */}
         <Select value={filters.language} onValueChange={(value) => handleFilterChange('language', value)}>
-          <SelectTrigger className="bg-white/10 border-white/20 text-white">
+          <SelectTrigger className="bg-gray-800/80 border-gray-600 text-gray-100">
             <SelectValue placeholder="Filter by language" />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Languages</SelectItem>
-            <SelectItem value="JavaScript">JavaScript</SelectItem>
-            <SelectItem value="TypeScript">TypeScript</SelectItem>
-            <SelectItem value="Python">Python</SelectItem>
-            <SelectItem value="Java">Java</SelectItem>
-            <SelectItem value="Go">Go</SelectItem>
-            <SelectItem value="Rust">Rust</SelectItem>
+          <SelectContent className="bg-gray-800 border-gray-600">
+            <SelectItem value="all" className="text-gray-100 hover:bg-gray-700">All Languages</SelectItem>
+            <SelectItem value="JavaScript" className="text-gray-100 hover:bg-gray-700">JavaScript</SelectItem>
+            <SelectItem value="TypeScript" className="text-gray-100 hover:bg-gray-700">TypeScript</SelectItem>
+            <SelectItem value="Python" className="text-gray-100 hover:bg-gray-700">Python</SelectItem>
+            <SelectItem value="Java" className="text-gray-100 hover:bg-gray-700">Java</SelectItem>
+            <SelectItem value="Go" className="text-gray-100 hover:bg-gray-700">Go</SelectItem>
+            <SelectItem value="Rust" className="text-gray-100 hover:bg-gray-700">Rust</SelectItem>
           </SelectContent>
         </Select>
 
@@ -120,7 +121,7 @@ export const AdvancedFilters = ({ onFilterChange, onSortChange, totalRepos }: Ad
             min="0"
             value={filters.minStars}
             onChange={(e) => handleFilterChange('minStars', parseInt(e.target.value) || 0)}
-            className="bg-white/10 border-white/20 text-white"
+            className="bg-gray-800/80 border-gray-600 text-gray-100 focus:border-blue-500"
           />
         </div>
 
@@ -130,7 +131,11 @@ export const AdvancedFilters = ({ onFilterChange, onSortChange, totalRepos }: Ad
             variant={filters.hasIssues ? "default" : "outline"}
             size="sm"
             onClick={() => handleFilterChange('hasIssues', !filters.hasIssues)}
-            className="text-xs"
+            className={`text-xs ${
+              filters.hasIssues 
+                ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                : 'bg-transparent border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-gray-100'
+            }`}
           >
             Has Issues
           </Button>
@@ -138,7 +143,11 @@ export const AdvancedFilters = ({ onFilterChange, onSortChange, totalRepos }: Ad
             variant={filters.isFork ? "default" : "outline"}
             size="sm"
             onClick={() => handleFilterChange('isFork', !filters.isFork)}
-            className="text-xs"
+            className={`text-xs ${
+              filters.isFork 
+                ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                : 'bg-transparent border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-gray-100'
+            }`}
           >
             Forks Only
           </Button>
@@ -146,7 +155,11 @@ export const AdvancedFilters = ({ onFilterChange, onSortChange, totalRepos }: Ad
             variant={filters.hasWiki ? "default" : "outline"}
             size="sm"
             onClick={() => handleFilterChange('hasWiki', !filters.hasWiki)}
-            className="text-xs"
+            className={`text-xs ${
+              filters.hasWiki 
+                ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                : 'bg-transparent border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-gray-100'
+            }`}
           >
             Has Wiki
           </Button>
@@ -154,21 +167,29 @@ export const AdvancedFilters = ({ onFilterChange, onSortChange, totalRepos }: Ad
             variant={filters.hasPages ? "default" : "outline"}
             size="sm"
             onClick={() => handleFilterChange('hasPages', !filters.hasPages)}
-            className="text-xs"
+            className={`text-xs ${
+              filters.hasPages 
+                ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                : 'bg-transparent border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-gray-100'
+            }`}
           >
             Has Pages
           </Button>
         </div>
 
         {/* Sort Options */}
-        <div className="border-t border-white/10 pt-4">
-          <h4 className="text-sm font-medium text-white mb-3">Sort by:</h4>
+        <div className="border-t border-gray-700 pt-4">
+          <h4 className="text-sm font-medium text-gray-100 mb-3">Sort by:</h4>
           <div className="grid grid-cols-2 gap-2">
             <Button
               variant={sort.field === 'updated' ? "default" : "outline"}
               size="sm"
               onClick={() => handleSortChange('updated')}
-              className="text-xs justify-between"
+              className={`text-xs justify-between ${
+                sort.field === 'updated' 
+                  ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                  : 'bg-transparent border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-gray-100'
+              }`}
             >
               <span className="flex items-center gap-1">
                 <Calendar className="w-3 h-3" />
@@ -182,7 +203,11 @@ export const AdvancedFilters = ({ onFilterChange, onSortChange, totalRepos }: Ad
               variant={sort.field === 'stars' ? "default" : "outline"}
               size="sm"
               onClick={() => handleSortChange('stars')}
-              className="text-xs justify-between"
+              className={`text-xs justify-between ${
+                sort.field === 'stars' 
+                  ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                  : 'bg-transparent border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-gray-100'
+              }`}
             >
               <span className="flex items-center gap-1">
                 <Star className="w-3 h-3" />
@@ -196,7 +221,11 @@ export const AdvancedFilters = ({ onFilterChange, onSortChange, totalRepos }: Ad
               variant={sort.field === 'forks' ? "default" : "outline"}
               size="sm"
               onClick={() => handleSortChange('forks')}
-              className="text-xs justify-between"
+              className={`text-xs justify-between ${
+                sort.field === 'forks' 
+                  ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                  : 'bg-transparent border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-gray-100'
+              }`}
             >
               <span className="flex items-center gap-1">
                 <GitFork className="w-3 h-3" />
@@ -210,7 +239,11 @@ export const AdvancedFilters = ({ onFilterChange, onSortChange, totalRepos }: Ad
               variant={sort.field === 'name' ? "default" : "outline"}
               size="sm"
               onClick={() => handleSortChange('name')}
-              className="text-xs justify-between"
+              className={`text-xs justify-between ${
+                sort.field === 'name' 
+                  ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                  : 'bg-transparent border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-gray-100'
+              }`}
             >
               Name
               {sort.field === 'name' && (
@@ -224,7 +257,7 @@ export const AdvancedFilters = ({ onFilterChange, onSortChange, totalRepos }: Ad
           variant="ghost"
           size="sm"
           onClick={clearFilters}
-          className="w-full text-gray-300 hover:text-white"
+          className="w-full text-gray-300 hover:text-gray-100 hover:bg-gray-700/50"
         >
           Clear All Filters
         </Button>
