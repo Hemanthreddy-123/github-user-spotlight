@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -53,8 +52,8 @@ export const AdvancedFilters = ({ onFilterChange, onSortChange, totalRepos }: Ad
   };
 
   const handleSortChange = (field: SortOptions['field']) => {
-    const newDirection = sort.field === field && sort.direction === 'desc' ? 'asc' : 'desc';
-    const newSort = { field, direction: newDirection };
+    const newDirection: 'asc' | 'desc' = sort.field === field && sort.direction === 'desc' ? 'asc' : 'desc';
+    const newSort: SortOptions = { field, direction: newDirection };
     setSort(newSort);
     onSortChange(newSort);
   };
