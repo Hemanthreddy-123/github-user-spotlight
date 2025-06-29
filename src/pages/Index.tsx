@@ -1,62 +1,169 @@
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { SearchForm } from "@/components/SearchForm";
 import { GitHubProfile } from "@/components/GitHubProfile";
+import { AdvancedFilters, FilterOptions, SortOptions } from "@/components/AdvancedFilters";
+import { UserAnalytics } from "@/components/UserAnalytics";
+import { ExportOptions } from "@/components/ExportOptions";
+import { GitHubUser, GitHubRepo, GitHubStats } from "@/types/github";
 import { Github } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-export interface GitHubUser {
-  login: string;
-  name: string;
-  avatar_url: string;
-  bio: string;
-  public_repos: number;
-  followers: number;
-  following: number;
-  location: string;
-  company: string;
-  blog: string;
-  created_at: string;
-  html_url: string;
-}
-
-export interface GitHubRepo {
-  id: number;
-  name: string;
-  description: string;
-  language: string;
-  stargazers_count: number;
-  forks_count: number;
-  html_url: string;
-  updated_at: string;
-}
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {
   const [user, setUser] = useState<GitHubUser | null>(null);
-  const [repos, setRepos] = useState<GitHubRepo[]>([]);
+  const [allRepos, setAllRepos] = useState<GitHubRepo[]>([]);
   const [loading, setLoading] = useState(false);
+  const [filters, setFilters] = useState<FilterOptions>({
+    language: 'all',
+    hasIssues: false,
+    isFork: false,
+    hasWiki: false,
+    hasPages: false,
+    searchQuery: '',
+    minStars: 0,
+    dateRange: 'all'
+  });
+  const [sortOptions, setSortOptions] = useState<SortOptions>({
+    field: 'updated',
+    direction: 'desc'
+  });
   const { toast } = useToast();
+
+  const filteredAndSortedRepos = useMemo(() => {
+    let filtered = allRepos.filter(repo => {
+      // Language filter
+      if (filters.language !== 'all' && repo.language !== filters.language) return false;
+      
+      // Search query
+      if (filters.searchQuery && !repo.name.toLowerCase().includes(filters.searchQuery.toLowerCase()) &&
+          !repo.description?.toLowerCase().includes(filters.searchQuery.toLowerCase())) return false;
+      
+      // Feature filters
+      if (filters.hasIssues && !repo.has_issues) return false;
+      if (filters.isFork && !repo.fork) return false;
+      if (filters.hasWiki && !repo.has_wiki) return false;
+      if (filters.hasPages && !repo.has_pages) return false;
+      
+      // Min stars
+      if (repo.stargazers_count < filters.minStars) return false;
+      
+      return true;
+    });
+
+    // Sort
+    filtered.sort((a, b) => {
+      let aValue: any, bValue: any;
+      
+      switch (sortOptions.field) {
+        case 'stars':
+          aValue = a.stargazers_count;
+          bValue = b.stargazers_count;
+          break;
+        case 'forks':
+          aValue = a.forks_count;
+          bValue = b.forks_count;
+          break;
+        case 'created':
+          aValue = new Date(a.created_at);
+          bValue = new Date(b.created_at);
+          break;
+        case 'updated':
+          aValue = new Date(a.updated_at);
+          bValue = new Date(b.updated_at);
+          break;
+        case 'name':
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        default:
+          return 0;
+      }
+
+      if (sortOptions.direction === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
+    return filtered;
+  }, [allRepos, filters, sortOptions]);
+
+  const userStats = useMemo((): GitHubStats => {
+    if (!allRepos.length) {
+      return {
+        totalStars: 0,
+        totalForks: 0,
+        totalWatchers: 0,
+        primaryLanguages: {},
+        contributionYears: []
+      };
+    }
+
+    const stats: GitHubStats = {
+      totalStars: allRepos.reduce((sum, repo) => sum + repo.stargazers_count, 0),
+      totalForks: allRepos.reduce((sum, repo) => sum + repo.forks_count, 0),
+      totalWatchers: allRepos.reduce((sum, repo) => sum + repo.watchers_count, 0),
+      primaryLanguages: {},
+      contributionYears: []
+    };
+
+    // Calculate language distribution
+    allRepos.forEach(repo => {
+      if (repo.language) {
+        stats.primaryLanguages[repo.language] = (stats.primaryLanguages[repo.language] || 0) + 1;
+      }
+    });
+
+    // Get contribution years
+    const years = new Set(allRepos.map(repo => new Date(repo.created_at).getFullYear().toString()));
+    stats.contributionYears = Array.from(years).sort();
+
+    return stats;
+  }, [allRepos]);
 
   const fetchGitHubData = async (username: string) => {
     setLoading(true);
     try {
+      console.log(`Fetching data for username: ${username}`);
+      
       // Fetch user data
       const userResponse = await fetch(`https://api.github.com/users/${username}`);
       if (!userResponse.ok) {
         throw new Error("User not found");
       }
       const userData = await userResponse.json();
+      console.log('User data fetched:', userData);
 
-      // Fetch repositories
-      const reposResponse = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=6`);
-      const reposData = await reposResponse.json();
+      // Fetch ALL repositories (not just 6)
+      let allReposData: GitHubRepo[] = [];
+      let page = 1;
+      const perPage = 100;
+
+      while (true) {
+        const reposResponse = await fetch(
+          `https://api.github.com/users/${username}/repos?sort=updated&per_page=${perPage}&page=${page}`
+        );
+        const reposData = await reposResponse.json();
+        
+        if (!reposData.length) break;
+        
+        allReposData = [...allReposData, ...reposData];
+        
+        if (reposData.length < perPage) break;
+        page++;
+      }
+
+      console.log(`Fetched ${allReposData.length} repositories`);
 
       setUser(userData);
-      setRepos(reposData);
+      setAllRepos(allReposData);
       
       toast({
         title: "Success!",
-        description: `Loaded profile for ${userData.name || userData.login}`,
+        description: `Loaded profile for ${userData.name || userData.login} with ${allReposData.length} repositories`,
       });
     } catch (error) {
       console.error("Error fetching GitHub data:", error);
@@ -66,7 +173,7 @@ const Index = () => {
         variant: "destructive",
       });
       setUser(null);
-      setRepos([]);
+      setAllRepos([]);
     } finally {
       setLoading(false);
     }
@@ -82,11 +189,11 @@ const Index = () => {
               <Github className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-white">
-              GitHub Profile Fetcher
+              Advanced GitHub Profile Analyzer
             </h1>
           </div>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Discover and showcase GitHub profiles with comprehensive insights and professional presentation
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            Comprehensive GitHub profile analysis with advanced filtering, analytics, and export capabilities
           </p>
         </div>
 
@@ -95,23 +202,68 @@ const Index = () => {
           <SearchForm onSearch={fetchGitHubData} loading={loading} />
         </div>
 
-        {/* Profile Display */}
         {user && (
-          <GitHubProfile user={user} repos={repos} loading={loading} />
+          <Tabs defaultValue="profile" className="space-y-8">
+            <TabsList className="grid w-full grid-cols-4 bg-white/10 backdrop-blur-sm">
+              <TabsTrigger value="profile" className="data-[state=active]:bg-white/20">
+                Profile
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="data-[state=active]:bg-white/20">
+                Analytics
+              </TabsTrigger>
+              <TabsTrigger value="repositories" className="data-[state=active]:bg-white/20">
+                Repositories
+              </TabsTrigger>
+              <TabsTrigger value="export" className="data-[state=active]:bg-white/20">
+                Export
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="profile" className="space-y-8">
+              <GitHubProfile user={user} repos={filteredAndSortedRepos.slice(0, 6)} loading={loading} />
+            </TabsContent>
+
+            <TabsContent value="analytics" className="space-y-8">
+              <UserAnalytics user={user} repos={allRepos} stats={userStats} />
+            </TabsContent>
+
+            <TabsContent value="repositories" className="space-y-8">
+              <AdvancedFilters 
+                onFilterChange={setFilters}
+                onSortChange={setSortOptions}
+                totalRepos={filteredAndSortedRepos.length}
+              />
+              <GitHubProfile user={user} repos={filteredAndSortedRepos} loading={loading} />
+            </TabsContent>
+
+            <TabsContent value="export" className="space-y-8">
+              <ExportOptions user={user} repos={allRepos} />
+            </TabsContent>
+          </Tabs>
         )}
 
         {/* Welcome State */}
         {!user && !loading && (
           <div className="text-center py-20">
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-12 max-w-2xl mx-auto border border-white/10">
-              <Github className="w-20 h-20 text-gray-400 mx-auto mb-6" />
-              <h2 className="text-2xl font-semibold text-white mb-4">
-                Enter a GitHub username to get started
-              </h2>
-              <p className="text-gray-400 leading-relaxed">
-                Search for any GitHub user to view their profile, repositories, and contribution statistics in a beautiful, professional format.
-              </p>
-            </div>
+            <Card className="bg-white/5 backdrop-blur-sm rounded-2xl max-w-2xl mx-auto border border-white/10">
+              <CardContent className="p-12">
+                <Github className="w-20 h-20 text-gray-400 mx-auto mb-6" />
+                <h2 className="text-2xl font-semibold text-white mb-4">
+                  Enter a GitHub username to get started
+                </h2>
+                <p className="text-gray-400 leading-relaxed mb-6">
+                  Search for any GitHub user to view their comprehensive profile analysis with:
+                </p>
+                <div className="grid grid-cols-2 gap-4 text-sm text-gray-300">
+                  <div>✓ Complete repository analysis</div>
+                  <div>✓ Advanced filtering & sorting</div>
+                  <div>✓ User activity analytics</div>
+                  <div>✓ Language proficiency stats</div>
+                  <div>✓ Export & sharing options</div>
+                  <div>✓ Engagement metrics</div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
       </div>
